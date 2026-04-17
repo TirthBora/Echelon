@@ -1,7 +1,7 @@
 import subprocess
 from ai.suggestion_engine import suggest_fix
 from ai.auto_fix import auto_fix
-from ai.ai_helper import ask_ai
+from ai.ai_engine import ask_ai
 from ai.ai_helper import build_error_prompt
 
 

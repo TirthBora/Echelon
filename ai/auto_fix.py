@@ -23,11 +23,6 @@ def auto_fix(error,service_path):
         print("Auto-fix: Installing node dependencies...\n")
         subprocess.run("npm install", shell=True, cwd=service_path)
         return True
-
-    if "address already in use" in error:
-        print("Auto-fix: Port conflict detected. Try another port manually.")
-        return False
-
     return False
 def handle_port_conflict(service):
     new_port = get_free_port()

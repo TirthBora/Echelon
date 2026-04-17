@@ -2,7 +2,6 @@ import os
 import requests
 
 API_KEY = os.getenv("OPENAI_API_KEY")
-
 def ask_ai(prompt):
     try:
         headers = {
@@ -11,7 +10,7 @@ def ask_ai(prompt):
         }
 
         data = {
-            "model": "gpt-4o-mini",
+            "model": "gpt-4.1-mini",   
             "messages": [
                 {"role": "system", "content": "You are a helpful developer assistant."},
                 {"role": "user", "content": prompt}
@@ -26,6 +25,14 @@ def ask_ai(prompt):
         )
 
         result = response.json()
+
+
+        if "error" in result:
+            return f"API Error: {result['error']['message']}"
+
+        if "choices" not in result:
+            return f"Unexpected API response: {result}"
+
         return result["choices"][0]["message"]["content"]
 
     except Exception as e:

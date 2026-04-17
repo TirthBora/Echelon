@@ -1,5 +1,5 @@
-def suggest_fix(eror):
-    error=error.lower()
+def suggest_fix(error):
+    error = error.lower()
     if "module not found" in error or "no module named" in error:
         print("Suggestion: Run 'pip install -r requirements.txt'")
 
