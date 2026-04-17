@@ -1,6 +1,6 @@
 import subprocess
 from ai.suggestion_engine import suggest_fix
-
+from ai.auto_fix import auto_fix
 def start_process(command, path="."):
     try:
         process = subprocess.Popen(
@@ -40,7 +40,15 @@ def run_parallel(services):
                 print(stdout)
             if stderr:
                 print(f"\nError in {service['path']}:\n{stderr}")
-                suggest_fix(stderr)
+                fixed = auto_fix(stderr, service["path"])
+
+                if fixed:
+                    print("\nRetrying service...\n")
+                    new_process = start_process(service["command"], service["path"])
+                    if new_process:
+                        new_process.wait()
+                else:
+                    suggest_fix(stderr)
 
     except KeyboardInterrupt:
         print("\nStopping all services...")
