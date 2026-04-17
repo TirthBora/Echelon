@@ -1,6 +1,8 @@
 import subprocess
 from ai.suggestion_engine import suggest_fix
 from ai.auto_fix import auto_fix
+from ai.ai_helper import ask_ai
+from ai.ai_helper import build_error_prompt
 
 
 def start_process(command, path="."):
@@ -11,7 +13,7 @@ def start_process(command, path="."):
             cwd=path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
         )
         return process
     except Exception as e:
@@ -36,7 +38,6 @@ def run_parallel(services):
         if process:
             processes.append((process, service))
 
-
     try:
         for p, service in processes:
             stdout, stderr = p.communicate()
@@ -57,6 +58,14 @@ def run_parallel(services):
                         new_process.wait()
                 else:
                     suggest_fix(stderr)
+
+                    print("\nTrying AI explanation...\n")
+
+                    prompt = build_error_prompt(stderr, service)
+                    ai_response = ask_ai(prompt)
+
+                    print("AI Suggestion:\n")
+                    print(ai_response)
 
     except KeyboardInterrupt:
         print("\nStopping all services...")
