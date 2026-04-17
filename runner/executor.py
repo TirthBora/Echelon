@@ -1,16 +1,18 @@
 import subprocess
 from ai.suggestion_engine import suggest_fix
 from ai.auto_fix import auto_fix
+
+
 def start_process(command, path="."):
     try:
         process = subprocess.Popen(
-            command, 
-            shell=True, 
+            command,
+            shell=True,
             cwd=path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
-            )
+        )
         return process
     except Exception as e:
         print(f"Error starting process: {e}")
@@ -32,19 +34,25 @@ def run_parallel(services):
         process = start_process(command, service["path"])
 
         if process:
-            processes.append((process,service))
+            processes.append((process, service))
+
+
     try:
         for p, service in processes:
-            stdout, stderr= process.communicate()
+            stdout, stderr = p.communicate()
+
             if stdout:
                 print(stdout)
+
             if stderr:
                 print(f"\nError in {service['path']}:\n{stderr}")
+
                 fixed = auto_fix(stderr, service["path"])
 
                 if fixed:
                     print("\nRetrying service...\n")
                     new_process = start_process(service["command"], service["path"])
+
                     if new_process:
                         new_process.wait()
                 else:
@@ -52,5 +60,6 @@ def run_parallel(services):
 
     except KeyboardInterrupt:
         print("\nStopping all services...")
-        for p in processes:
+
+        for p, _ in processes:
             p.terminate()

@@ -1,4 +1,5 @@
 import subprocess
+from utils.port_utils import get_free_port
 import os
 def auto_fix(error,service_path):
     error=error.lower()
@@ -14,6 +15,9 @@ def auto_fix(error,service_path):
     if "npm" in error and "not found" in error:
         print("Auto-fix: npm not found. Please install Node.js.")
         return False
+    if "address already in use" in error:
+        print("Auto-fix: Port conflict detected.\n")
+        return "port"
 
     if "node_modules" in error or "cannot find module" in error:
         print("Auto-fix: Installing node dependencies...\n")
@@ -25,3 +29,17 @@ def auto_fix(error,service_path):
         return False
 
     return False
+def handle_port_conflict(service):
+    new_port = get_free_port()
+    print(f"Auto-fix: Switching to free port {new_port}")
+
+    command = service["command"]
+
+    if "uvicorn" in command:
+        command += f" --port {new_port}"
+
+    elif "npm start" in command or "npm run dev" in command:
+        command = f"set PORT={new_port} && {command}"
+
+    service["command"] = command
+    return service
