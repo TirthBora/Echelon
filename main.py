@@ -1,6 +1,6 @@
 from scanner.detect_project import detect_project
 from engine.command_builder import get_command
-from runner.executor import run_command
+from runner.executor import run_parallel
 
 def main():
     print("Scanning project...\n")
@@ -10,6 +10,8 @@ def main():
     if not services:
         print("No recognizable services found.")
         return 
+    selected_services=[]
+
     for i,service in enumerate(services):
         print(f"\nService {i+1}:")
         print(f"Path: {service['path']}")
@@ -21,9 +23,14 @@ def main():
             print(f"Command: {command}")
             choice =input("Run this service? (y/n): ")
             if choice.lower()=="y":
-                run_command(command,service["path"])
+                selected_services.append(service)
         else:
             print("No command Available.")
+    if selected_services:
+        print("\nStarting selected services...\n")
+        run_parallel(selected_services)
+    else:
+        print("No services selected.")
 
 if __name__ =="__main__":
     main()
