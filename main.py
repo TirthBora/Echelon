@@ -1,36 +1,50 @@
-from scanner.detect_project import detect_project
+from scanner.detect_project import detect_project, classify_service
 from engine.command_builder import get_command
-from runner.executor import run_parallel
+from runner.executor import run_parallel, run_command
+
 
 def main():
     print("Scanning project...\n")
 
-    services=detect_project()
+    services = detect_project()
 
     if not services:
         print("No recognizable services found.")
-        return 
-    selected_services=[]
+        return
 
-    for i,service in enumerate(services):
-        print(f"\nService {i+1}:")
-        print(f"Path: {service['path']}")
-        print(f"Language: {service['language']}")
+    backend_services = []
+    frontend_services = []
 
-        command=get_command(service)
+    for service in services:
+        service_type = classify_service(service)
+        command = get_command(service)
 
-        if command:
-            print(f"Command: {command}")
-            choice =input("Run this service? (y/n): ")
-            if choice.lower()=="y":
-                selected_services.append(service)
-        else:
-            print("No command Available.")
-    if selected_services:
-        print("\nStarting selected services...\n")
-        run_parallel(selected_services)
+        if not command:
+            continue
+
+        service["command"] = command
+
+        if service_type == "backend":
+            backend_services.append(service)
+        elif service_type == "frontend":
+            frontend_services.append(service)
+
+    ordered_services = backend_services + frontend_services
+
+    if not ordered_services:
+        print("No runnable services found.")
+        return
+
+    print("Auto-running detected services...\n")
+
+    for s in ordered_services:
+        print(f"{s['path']} → {s['command']}")
+
+    if len(ordered_services) == 1:
+        run_command(ordered_services[0]["command"], ordered_services[0]["path"])
     else:
-        print("No services selected.")
+        run_parallel(ordered_services)
 
-if __name__ =="__main__":
+
+if __name__ == "__main__":
     main()
