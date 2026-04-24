@@ -1,39 +1,19 @@
-import os
-import requests
+import subprocess
 
-API_KEY = os.getenv("OPENAI_API_KEY")
 def ask_ai(prompt):
     try:
-        headers = {
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json"
-        }
-
-        data = {
-            "model": "gpt-4.1-mini",   
-            "messages": [
-                {"role": "system", "content": "You are a helpful developer assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.3
-        }
-
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers=headers,
-            json=data
+        result = subprocess.run(
+            ["ollama", "run", "llama3"],
+            input=prompt,
+            text=True,
+            capture_output=True,
+            encoding="utf-8"
         )
 
-        result = response.json()
+        output = result.stdout.strip()
+        lines = [line.strip() for line in output.split("\n") if line.strip()]
 
-
-        if "error" in result:
-            return f"API Error: {result['error']['message']}"
-
-        if "choices" not in result:
-            return f"Unexpected API response: {result}"
-
-        return result["choices"][0]["message"]["content"]
+        return lines[-1] if lines else ""
 
     except Exception as e:
-        return f"AI Error: {e}"
+        return f"Ollama Error: {e}"
