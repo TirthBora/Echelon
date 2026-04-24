@@ -16,7 +16,7 @@ def detect_project(path="."):
 
     for root, dirs, files in os.walk(path):
         dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
-
+   
         files_set = set(files)
 
         service = {
@@ -53,6 +53,8 @@ def detect_project(path="."):
                 break
 
         if service["language"] and service["entry"]:
+            if os.path.abspath(root) == os.path.abspath(path):
+                service["is_root"] = True
             services.append(service)
 
     return services
