@@ -1,16 +1,24 @@
 def build_error_prompt(error, service):
     return f"""
-I ran a project and got this error:
+        You are a strict coding assistant.
 
-{error}
+        Return ONLY in this format:
 
-Project details:
-- Language: {service.get("language")}
-- Framework: {service.get("framework")}
-- Path: {service.get("path")}
+        ERROR:
+        <short explanation>
 
-Explain:
-1. What the error means
-2. How to fix it
-3. Exact command if possible
-"""
+        FIX:
+        <what to change>
+
+        CODE:
+        <corrected code OR exact command>
+
+        ---
+
+        Error:
+        {error}
+
+        Project:
+        Language: {service.get("language")}
+        Path: {service.get("path")}
+        """
