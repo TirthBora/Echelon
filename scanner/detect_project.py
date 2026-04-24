@@ -34,6 +34,7 @@ def detect_project(path="."):
         elif "requirements.txt" in files_set or "pyproject.toml" in files_set:
             service["language"] = "python"
 
+
         elif "pom.xml" in files_set or "build.gradle" in files_set:
             service["language"] = "java"
 
@@ -42,6 +43,20 @@ def detect_project(path="."):
 
         elif "Cargo.toml" in files_set:
             service["language"] = "rust"
+    # Fallback detection
+        if not service["language"]:
+            if any(f.endswith(".py") for f in files):
+                service["language"] = "python"
+            elif any(f.endswith(".js") for f in files):
+                service["language"] = "node"
+            elif any(f.endswith(".java") for f in files):
+                service["language"] = "java"
+            elif any(f.endswith(".cpp") or f.endswith(".c") for f in files):
+                service["language"] = "cpp"
+            elif any(f.endswith(".go") for f in files):
+                service["language"] = "go"
+            elif any(f.endswith(".rs") for f in files):
+                service["language"] = "rust"
 
         entry_files = [
             "main.py", "app.py", "server.py",

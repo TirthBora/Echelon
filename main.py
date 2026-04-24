@@ -44,9 +44,18 @@ def main():
             print(f"{s['path']} -> {s['command']}")
         run_parallel(non_root_services)
     else:
-        for s in ordered_services:
-            print(f"{s['path']} -> {s['command']}")
-        run_parallel(ordered_services)
+        safe_services = [
+            s
+            for s in ordered_services
+            if not (s.get("is_root") and "main.py" in str(s.get("command")))
+        ]
+
+        if safe_services:
+            for s in safe_services:
+                print(f"{s['path']} -> {s['command']}")
+            run_parallel(safe_services)
+        else:
+            print("No safe services to run.")
 
 
 if __name__ == "__main__":
