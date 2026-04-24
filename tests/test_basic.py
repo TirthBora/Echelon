@@ -6,8 +6,9 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from ai.ai_engine import ask_ai
 
 def test_ai():
-    response = ask_ai("What is ModuleNotFoundError in Python?")
-    print(response)
+    response = ask_ai("What is ModuleNotFoundErrors?")
+    
 
-if __name__ == "__main__":
-    test_ai()
+    assert ininstance(response,str)
+    assert len(response.strip())>0
+
