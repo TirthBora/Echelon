@@ -21,7 +21,6 @@ def start_process(command, path="."):
         print(f"Error starting process: {e}")
         return None
 
-
 def run_parallel(services):
     processes = []
 
@@ -49,33 +48,48 @@ def run_parallel(services):
             if stderr:
                 print(f"\nError in {service['path']}:\n{stderr}")
 
+              
                 fixed = auto_fix(stderr, service["path"])
 
+             
+                if fixed == "port":
+                    from ai.auto_fix import handle_port_conflict
+
+                    service = handle_port_conflict(service)
+
+                    print("\nRetrying with new port...\n")
+
+                    new_process = start_process(service["command"], service["path"])
+                    if new_process:
+                        new_process.wait()
+                    continue
+
+              
                 if fixed:
                     print("\nRetrying service...\n")
+
+                    new_process = start_process(service["command"], service["path"])
+
+                    if new_process:
+                        new_process.wait()
+                    continue
+
+                suggest_fix(stderr)
+
+                prompt = build_error_prompt(stderr, service)
+                ai_response = ask_ai(prompt)
+
+                fixed_by_ai = apply_ai_fix(service, ai_response)
+
+                if fixed_by_ai:
+                    print("\nRetrying after AI fix...\n")
+
                     new_process = start_process(service["command"], service["path"])
 
                     if new_process:
                         new_process.wait()
                 else:
-                    suggest_fix(stderr)
-
-                    prompt = build_error_prompt(stderr, service)
-                    ai_response = ask_ai(prompt)
-
-                    
-
-                    fixed_by_ai = apply_ai_fix(service, ai_response)
-
-                    if fixed_by_ai:
-                        print("\nRetrying after AI fix...\n")
-
-                        new_process = start_process(service["command"], service["path"])
-
-                        if new_process:
-                            new_process.wait()
-                    else:
-                        print("\nAI could not fix the issue.\n")
+                    print("\nAI could not fix the issue.\n")
 
     except KeyboardInterrupt:
         print("\nStopping all services...")
