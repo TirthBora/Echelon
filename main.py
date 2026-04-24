@@ -1,6 +1,6 @@
 from scanner.detect_project import detect_project, classify_service
 from engine.command_builder import get_command
-from runner.executor import run_parallel, run_command
+from runner.executor import run_parallel
 
 
 def main():
@@ -40,10 +40,7 @@ def main():
     for s in ordered_services:
         print(f"{s['path']} → {s['command']}")
 
-    if len(ordered_services) == 1:
-        run_command(ordered_services[0]["command"], ordered_services[0]["path"])
-    else:
-        run_parallel(ordered_services)
+    run_parallel(ordered_services)
 
 
 if __name__ == "__main__":
