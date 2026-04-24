@@ -86,3 +86,7 @@ def run_parallel(services):
 
         for p, _ in processes:
             p.terminate()
+def run_command(command, path="."):
+    process = start_process(command, path)
+    if process:
+        process.wait()
