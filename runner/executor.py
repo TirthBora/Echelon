@@ -3,6 +3,7 @@ from ai.suggestion_engine import suggest_fix
 from ai.auto_fix import auto_fix
 from ai.ai_engine import ask_ai
 from ai.ai_helper import build_error_prompt
+from ai.auto_fix import apply_ai_fix
 
 
 def start_process(command, path="."):
@@ -59,13 +60,22 @@ def run_parallel(services):
                 else:
                     suggest_fix(stderr)
 
-                    print("\nTrying AI explanation...\n")
-
                     prompt = build_error_prompt(stderr, service)
                     ai_response = ask_ai(prompt)
 
-                    print("AI Suggestion:\n")
-                    print(ai_response)
+                    
+
+                    fixed_by_ai = apply_ai_fix(service, ai_response)
+
+                    if fixed_by_ai:
+                        print("\nRetrying after AI fix...\n")
+
+                        new_process = start_process(service["command"], service["path"])
+
+                        if new_process:
+                            new_process.wait()
+                    else:
+                        print("\nAI could not fix the issue.\n")
 
     except KeyboardInterrupt:
         print("\nStopping all services...")

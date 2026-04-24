@@ -38,3 +38,16 @@ def handle_port_conflict(service):
 
     service["command"] = command
     return service
+def extract_code(ai_response):
+    lines = ai_response.split("\n")
+    code_lines = []
+    capture = False
+
+    for line in lines:
+        if line.strip().startswith("CODE:"):
+            capture = True
+            continue
+        if capture:
+            code_lines.append(line)
+
+    return "\n".join(code_lines).strip()

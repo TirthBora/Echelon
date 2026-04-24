@@ -11,7 +11,9 @@ def ask_ai(prompt):
                 "model": "llama3",
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0},
+                "options": {"temperature": 0,
+                            "num_predict":300
+                            },
             },
             timeout=30,
         )
