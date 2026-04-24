@@ -1,19 +1,32 @@
-import subprocess
+import requests
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+
 
 def ask_ai(prompt):
     try:
-        result = subprocess.run(
-            ["ollama", "run", "llama3"],
-            input=prompt,
-            text=True,
-            capture_output=True,
-            encoding="utf-8"
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": "llama3",
+                "prompt": prompt,
+                "stream": False,
+                "options": {"temperature": 0},
+            },
+            timeout=30,
         )
 
-        output = result.stdout.strip()
-        lines = [line.strip() for line in output.split("\n") if line.strip()]
+        response.raise_for_status()
 
-        return lines[-1] if lines else ""
+        data = response.json()
+
+        return data.get("response", "").strip()
+
+    except requests.exceptions.ConnectionError:
+        return "Error: Ollama is not running."
+
+    except requests.exceptions.Timeout:
+        return "Error: Request timed out."
 
     except Exception as e:
-        return f"Ollama Error: {e}"
+        return f"AI Error: {str(e)}"
