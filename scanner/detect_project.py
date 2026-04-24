@@ -16,7 +16,7 @@ def detect_project(path="."):
 
     for root, dirs, files in os.walk(path):
         dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
-   
+    
         files_set = set(files)
 
         service = {
@@ -25,6 +25,8 @@ def detect_project(path="."):
             "framework": None,
             "entry": None
         }
+        if root==path:
+            service["is_root"]=True
 
         if "package.json" in files_set:
             service["language"] = "node"

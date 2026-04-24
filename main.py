@@ -37,16 +37,16 @@ def main():
 
     print("Auto-running detected services...\n")
 
-    for s in ordered_services:
-        if s.get("is_root"):
-            print(f"Skipping root project: {s['path']}")
-            continue
+    non_root_services = [s for s in ordered_services if not s.get("is_root")]
 
-        print(f"{s['path']} -> {s['command']}")
-
-    filtered_services = [s for s in ordered_services if not s.get("is_root")]
-
-    run_parallel(filtered_services)
+    if non_root_services:
+        for s in non_root_services:
+            print(f"{s['path']} -> {s['command']}")
+        run_parallel(non_root_services)
+    else:
+        for s in ordered_services:
+            print(f"{s['path']} -> {s['command']}")
+        run_parallel(ordered_services)
 
 
 if __name__ == "__main__":
