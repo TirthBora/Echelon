@@ -64,33 +64,37 @@ def get_default_port(framework):
     return DEFAULT_PORTS.get(framework)
 
 
+def open_browser(port):
+    url = f"http://localhost:{port}"
+    print(f"\n[Echelon] Opening: {url}\n")
+    webbrowser.open(url)
+
+
 def monitor_process(process, service):
     opened = False
-    start_time = time.time()
     detected_port = None
 
     try:
+        fallback = get_default_port(service.get("framework"))
+        if fallback:
+            open_browser(fallback)
+            opened = True
+            detected_port = fallback
+
         for line in iter(process.stdout.readline, ''):
             if not line:
                 break
 
             print(line, end="")
 
-            if not opened:
-                port = extract_port(line)
+            
+            port = extract_port(line)
 
-                if port:
-                    detected_port = port
-                    open_browser(port)
-                    opened = True
-
-                elif time.time() - start_time > 1:
-                    fallback = get_default_port(service.get("framework"))
-
-                    if fallback:
-                        print(f"\n[Echelon] Using fallback port {fallback}\n")
-                        open_browser(fallback)
-                        opened = True
+            if port and port != detected_port:
+                print(f"\n[Echelon] Detected actual port {port}\n")
+                open_browser(port)
+                detected_port = port
+                opened = True
 
         stderr = process.stderr.read()
 
@@ -99,13 +103,6 @@ def monitor_process(process, service):
 
     except Exception as e:
         print(f"[Echelon] Monitor error: {e}")
-
-
-def open_browser(port):
-    url = f"http://localhost:{port}"
-    print(f"\n[Echelon] Opening: {url}\n")
-    time.sleep(1)
-    webbrowser.open(url)
 
 
 def handle_error(stderr, service):
@@ -126,7 +123,7 @@ def handle_error(stderr, service):
 
     suggest_fix(stderr)
 
-    print("\n[Echelon]  Asking AI...\n")
+    print("\n[Echelon] Asking AI...\n")
 
     prompt = build_error_prompt(stderr, service)
     ai_response = ask_ai(prompt)
@@ -139,7 +136,11 @@ def handle_error(stderr, service):
 def restart_service(service):
     new_process = start_process(service["command"], service["path"])
     if new_process:
-        monitor_process(new_process, service)
+        threading.Thread(
+            target=monitor_process,
+            args=(new_process, service),
+            daemon=True
+        ).start()
 
 
 def run_parallel(services):
@@ -150,13 +151,13 @@ def run_parallel(services):
         if not command:
             continue
 
-        print(f"\n[Echelon] ▶ Starting {service['language']} in {service['path']}")
+        print(f"\n[Echelon] Starting {service['language']} in {service['path']}")
         print(f"Command: {command}\n")
 
         process = start_process(command, service["path"])
 
         if process:
-            processes.append((process, service))
+            processes.append(process)
 
             threading.Thread(
                 target=monitor_process,
@@ -165,13 +166,13 @@ def run_parallel(services):
             ).start()
 
     try:
-        for p, _ in processes:
+        for p in processes:
             p.wait()
 
     except KeyboardInterrupt:
-        print("\n[Echelon]  Stopping all services...")
+        print("\n[Echelon] Stopping all services...")
 
-        for p, _ in processes:
+        for p in processes:
             p.terminate()
 
 
