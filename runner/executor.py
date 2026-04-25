@@ -1,4 +1,6 @@
 import subprocess
+import webbrowser
+import time
 
 from ai.suggestion_engine import suggest_fix
 from ai.auto_fix import auto_fix, handle_port_conflict
@@ -38,6 +40,9 @@ def run_parallel(services):
 
         if process:
             processes.append((process, service))
+            if process and service.get("framework") == "static":
+                time.sleep(1)
+                webbrowser.open("http://localhost:5500")
 
     try:
         for p, service in processes:
